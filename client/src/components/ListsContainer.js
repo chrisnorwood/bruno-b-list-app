@@ -13,6 +13,7 @@ class ListsContainer extends React.Component {
     }
 
     this.addNewList = this.addNewList.bind(this)
+    this.removeList = this.removeList.bind(this)
   }
 
   componentDidMount() {
@@ -38,6 +39,18 @@ class ListsContainer extends React.Component {
       })
   }
 
+  removeList (id) {
+    axios.delete('/api/v1/lists/' + id)
+      .then(response => {
+        const lists = this.state.lists.filter(
+          list => list.id !== id
+        )
+
+        this.setState({ lists })
+      })
+      .catch(error => console.log('Error deleting list:', error))
+  }
+
   render() {
     return (
       <React.Fragment>
@@ -46,7 +59,7 @@ class ListsContainer extends React.Component {
         <div className='lists-container'>
           {this.state.lists.map( list => {
             return (
-                <List list={list} key={list.id} />
+                <List list={list} key={list.id} onRemoveList={this.removeList} />
             )
           })}
         </div>
