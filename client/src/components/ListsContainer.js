@@ -3,6 +3,7 @@ import axios from 'axios'
 
 import List from './List'
 import NewListForm from './NewListForm'
+import EditListForm from './EditListForm'
 
 class ListsContainer extends React.Component {
   constructor(props) {
@@ -10,10 +11,13 @@ class ListsContainer extends React.Component {
 
     this.state = {
       lists: [],
+      editingListId: null,
     }
 
     this.addNewList = this.addNewList.bind(this)
     this.removeList = this.removeList.bind(this)
+    this.editList = this.editList.bind(this)
+    this.editingList = this.editingList.bind(this)
   }
 
   componentDidMount() {
@@ -51,18 +55,58 @@ class ListsContainer extends React.Component {
       .catch(error => console.log('Error deleting list:', error))
   }
 
+  editList(id, title, excerpt) {
+    axios.put('/api/v1/lists/' + id, {
+      list: {
+        title,
+        excerpt
+      }
+    })
+    .then(response => {
+      console.log('Update List Response:', response)
+      const lists = this.state.lists;
+      lists[id-1] = {id, title, excerpt}
+      this.setState(() => ({
+        lists,
+        editingListId: null
+      }))
+    })
+    .catch(error => console.log('Error updating list: ', error))
+  }
+
+  editingList(id) {
+    this.setState({
+      editingListId: id
+    })
+  }
+
   render() {
     return (
       <React.Fragment>
-        <NewListForm onNewList={this.addNewList} />
-
         <div className='lists-container'>
           {this.state.lists.map( list => {
-            return (
-                <List list={list} key={list.id} onRemoveList={this.removeList} />
-            )
+            if ( this.state.editingListId === list.id ) {
+              return (
+                <EditListForm
+                  list={list}
+                  key={list.id}
+                  editList={this.editList}
+                />
+              )
+            } else {
+              return (
+                <List
+                  list={list}
+                  key={list.id}
+                  onRemoveList={this.removeList}
+                  editingList={this.editingList}
+                />
+              )
+            }
           })}
         </div>
+
+        <NewListForm onNewList={this.addNewList} />
       </React.Fragment>
     )
   }
